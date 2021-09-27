@@ -12,8 +12,7 @@
 #include "../lib/Constraints.hpp"
 #include "../lib/FreeEnergyUtils.hpp"
 #include "../lib/RunPthread.hpp"
-#include "../lib/Step5Header.hpp"
-#include "../lib/KernelFunction.hpp"
+#include "../lib/DataStructures.hpp"
 
 #include "Input.hpp"
 

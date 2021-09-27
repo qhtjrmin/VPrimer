@@ -150,11 +150,9 @@ bool readInputParameter(int argc, char*argv[], inputParameter* input) {
 			strcpy(input->dirPath, dir.c_str());
 
 			tmpFname = dir + "/C1.txt";
-//			tmpFname = "/mnt/min/updated_result/SARS_CoV2/probe/C2.txt";
 			strcpy(input->c1Path, tmpFname.c_str());
 
-			tmpFname = dir + "/C1'.txt";
-//			tmpFname = "/mnt/min/data_host/probe/C1'.txt";
+			tmpFname = dir + "/C1_sidset.txt";
 			strcpy(input->c1SidsetPath, tmpFname.c_str());
 
 			tmpFname = dir + "/tmp.txt";
