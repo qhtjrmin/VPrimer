@@ -9,7 +9,7 @@
  * is strictly prohibited.
  */
 
-#include "GPrimer.hpp"
+#include "VPrimer.hpp"
 
 int main(int argc, char *argv[]) {
 	inputParameter* input = new inputParameter();
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	initialization(input);
-
+	
 	cout << "## Stage 1 : candidate generation" << endl;
 
 	st1 = getCurrentTime();
@@ -41,7 +41,6 @@ int main(int argc, char *argv[]) {
 
 	runPthread(stage2, input->numOfThreads, &elapsedTime);
 	cout << "1_4(reorganization) : " << elapsedTime << " sec"  << endl;
-
 	et1 = getCurrentTime();
 
 	sysCall("rm " + string(myInput->dirPath) + "/C1.txt_*");

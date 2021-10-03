@@ -9,7 +9,7 @@
  * is strictly prohibited.
  */
 
-#include "GPrimer.hpp"
+#include "VPrimer.hpp"
 
 int main(int argc, char *argv[]) {
 	inputParameter* input = new inputParameter();
