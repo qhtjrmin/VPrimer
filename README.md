@@ -16,7 +16,7 @@ VPrimer needs the following softwares to run in the system:
 - gcc/g++ 4.8.x or later
 
 #2. Running
-## 2.1. Prepare input sequence data
+## 2.1 Prepare input sequence data
 The example of input files that can be used are in "input_test" folder. In the case of host data, it should be decompressed as the following command to use for input.
 ```
 $ gunzip human_host.txt.gz
@@ -29,7 +29,11 @@ The required data is as follow:
 The mapping data is for coverage checking and homology test against other virus.
 Refer to test inputs and the paper for the format and meaning of the files. 
 
-## 2.2 Get VPrimer execution file and run
+## 2.2 Input data generation
+Refer to the following link:
+https://github.com/Hajin-Jeon/VPrimer-input-generator
+
+## 2.3 Get VPrimer execution file and run
 The basic execution order is as follows.
 - find host subsequences (host_primer and host_probe)
 - find virus primer and probe candidates (virus_primer and virus_probe)
