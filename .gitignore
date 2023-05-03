@@ -1,0 +1,11 @@
+*.o
+
+src/host_primer/directory/
+src/host_probe/directory/
+src/virus_primer/directory/
+src/virus_probe/directory/
+
+src/host_primer/output/
+src/host_probe/output/
+src/virus_primer/output/
+src/virus_probe/output/

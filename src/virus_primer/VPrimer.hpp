@@ -3,6 +3,8 @@
  *
  *  Created on: Feb 15, 2020
  *      Author: jmbae
+ *  Latest update: May 04, 2023
+ *  	by hjjeon
  */
 
 #ifndef GPRIMER_HPP_
@@ -310,8 +312,9 @@ void* stage2(void* rank) {
 	ifstream fin;
 	fileReadOpen(&fin, myInput->c1Path, myRank);
 
-	FILE *fout1;
+	FILE *fout1, *fout2;
 	fileWriteOpen(&fout1, myInput->c2Path, myRank); // C2.txt
+	fileWriteOpen(&fout2, myInput->c1SidsetPath, myRank); //C1'.txt
 
 	while (fin.good()) {
 
@@ -413,10 +416,10 @@ void* stage2(void* rank) {
 				else
 					pass = false;
 
-//				if (line > 0)
-//					fprintf(fout2, "\n%s\t%s", val[0], val[1]); //write to C1'
-//				else
-//					fprintf(fout2, "%s\t%s", val[0], val[1]); //write to C1'
+				if (line > 0)
+					fprintf(fout2, "\n%s\t%s", val[0], val[1]); //write to C1'
+				else
+					fprintf(fout2, "%s\t%s", val[0], val[1]); //write to C1'
 			}
 
 			else if (!strcmp(val[0], beforePrimer) && pass) {
@@ -424,8 +427,8 @@ void* stage2(void* rank) {
 
 				fprintf(fout1, "%s\t%s\t%s\n", val[0], val[1], val[2]); //write to C2
 
-//				if (strcmp(beforeSid, val[1]))
-//					fprintf(fout2, "-%s", val[1]); //write to C1'
+				if (strcmp(beforeSid, val[1]))
+					fprintf(fout2, "-%s", val[1]); //write to C1'
 
 				primer = new char[maxLen + 2];
 				sid = new char[6];
@@ -441,17 +444,17 @@ void* stage2(void* rank) {
 
 			}
 
-//			else {
-//				//before primer is the same as current primer but before primer is filterd out
-//				if (strcmp(beforeSid, val[1]))
-//					fprintf(fout2, "-%s", val[1]); //write to C1'
-//			}
+			else {
+				//before primer is the same as current primer but before primer is filterd out
+				if (strcmp(beforeSid, val[1]))
+					fprintf(fout2, "-%s", val[1]); //write to C1'
+			}
 		}
 		strcpy(beforePrimer, val[0]);
 		strcpy(beforeSid, val[1]);
 		line++;
 	}
-//	fprintf(fout2, "\n"); //write to C1'
+	fprintf(fout2, "\n"); //write to C1'
 
 	del(beforePrimer);
 	del(beforeSid);
@@ -459,7 +462,7 @@ void* stage2(void* rank) {
 
 	fin.close();
 	fclose(fout1);
-//	fclose(fout2);
+	fclose(fout2);
 
 	return NULL;
 }
@@ -1134,7 +1137,7 @@ void* stage4Prepare(void* param) { //prepare arraysC3 and copy it to GPU memory
 
 		remaining_mm = memGPU - usedMemory;
 
-		workloadC1 =  remaining_mm / (myMemory / numOfGPUs) * 100000;
+		workloadC1 =  remaining_mm / (myMemory / numOfGPUs) * 10000 * 4;
 
 		cout << usedMemory << " MB is utilized. "
 				<< workloadC1 <<  " workload" << endl;
@@ -1187,7 +1190,8 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 
 	seed = new char[seedLen + 1];
 	memset(seed, 0, seedLen + 1);
-	new_key = new char[seedLen + 6];
+	new_key = new char[seedLen + 11];
+	memset(new_key, 0, seedLen + 11);
 
 	vector<char>* P;
 	vector<unsigned int>* sid;
@@ -1241,6 +1245,8 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 	ifstream fin;
 	fileReadOpen(&fin, myInput->c1SidsetPath, myRank);
 
+//	cout << myInput->c1SidsetPath << endl;
+
 	while (1) {
 
 		if (line < workloadC1) {
@@ -1253,13 +1259,18 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 			}
 		}
 
+//		cout << "before line<workloadC1" << endl;
 		if (line < workloadC1) {
+//			cout << "line < workloadC1" << line << " " << workloadC1 << endl;
 			ptr = buf;
 			ptr2 = strchr(ptr, '\t');
 			*ptr2 = '\0';
 
+//			cout << "before strcpy" << endl;
 			strcpy(c1_primer, ptr);
+//			cout << "after strcpy c1_primer" << endl;
 			strcpy(ori_sidset, ++ptr2);
+//			cout << "after strcpy ori_sidset" << endl;
 
 			if (c1_primer[0] == '*') {
 				primer = c1_primer + 1;
@@ -1271,14 +1282,16 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 
 #ifdef DEBUG
 			if (myRank == 1 && line >= cnt * 1000000) {
-				cout << loop << " " << line << endl;
+				cout <<		 loop << " " << line << endl;
 				cnt++;
 			}
 #endif
 
 			int len_primer = strlen(primer);
 			strcpy(len_primer_char, to_string(len_primer).c_str());
+//			cout << "after strcpy len_primer_char" << endl;
 			memset(seed, 0, seedLen + 1);
+//			cout << "after memset seed" << endl;
 			for (int i = 0; i < len_primer - seedLen + 1; i++) {
 				memcpy(seed, primer + i, seedLen);
 
@@ -1294,6 +1307,7 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 				} else {
 					G_idx = &seedHfIdx;
 				}
+//				cout << "G_idx: " << G_idx << endl;
 
 				if ((G_idx->find(new_key)) != G_idx->end()) {
 					g_check = true;
@@ -1310,6 +1324,7 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 						seedH_lock = &seedHf_lock2[tmp_idx];
 						total = seedHf.size();
 					}
+//					cout << "total: " << total << endl;
 
 					if (tmp_idx < total) {
 						pthread_mutex_lock(seedH_lock);
@@ -1353,6 +1368,7 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 
 		else {
 
+//			cout << "line > workloadC1 " << line << " " << workloadC1 << endl;
 			mCheck = false;
 
 			if (myRank == 0)
@@ -1544,51 +1560,61 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 
 				mCheck = true;
 
+//				cout << "before myRank%2" << endl;
 				if (myRank % 2 == 0) {
 
 					cudaSetDevice(tmpRank);
 
+//					cout << "1" << endl;
 					HANDLE_ERROR(cudaStreamCreate(&streamF[myStream]));
-
+//					cout << "2" << endl;
 					HANDLE_ERROR(
 							cudaMalloc((void** ) &P1f_dev[myStream],
 									sizeof(char) * maxLen
 											* fP_total[myStream]));
+//					cout << "3" << endl;
 					HANDLE_ERROR(
 							cudaMalloc((void** ) &SID1f_dev[myStream],
 									sizeof(unsigned int)
 											* fsid_total[myStream]));
+//					cout << "4" << endl;
 					HANDLE_ERROR(
 							cudaMalloc((void** ) &P1foffset_dev[myStream],
 									sizeof(unsigned long)
 											* (fP_total[myStream] + 1)));
+//					cout << "5" << endl;
 					HANDLE_ERROR(
 							cudaMalloc((void** ) &c1_foff_dev[myStream],
 									sizeof(unsigned long)
 											* (Gf_size[myStream] + 1)));
+//					cout << "6" << endl;
 
 					HANDLE_ERROR(
 							cudaMemcpyAsync(P1f_dev[myStream],
 									&myP1f[myStream][0],
 									sizeof(char) * maxLen * fP_total[myStream],
 									cudaMemcpyHostToDevice, streamF[myStream]));
+//					cout << "7" << endl;
 					HANDLE_ERROR(
 							cudaMemcpyAsync(SID1f_dev[myStream],
 									&mySID1f[myStream][0],
 									sizeof(unsigned int) * fsid_total[myStream],
 									cudaMemcpyHostToDevice, streamF[myStream]));
+//					cout << "8" << endl;
 					HANDLE_ERROR(
 							cudaMemcpyAsync(P1foffset_dev[myStream],
 									&mySID1foffset[myStream][0],
 									sizeof(unsigned long)
 											* (fP_total[myStream] + 1),
 									cudaMemcpyHostToDevice, streamF[myStream]));
+//					cout << "9" << endl;
 					HANDLE_ERROR(
 							cudaMemcpyAsync(c1_foff_dev[myStream],
 									&myP1foffset[myStream][0],
 									sizeof(unsigned long)
 											* (Gf_size[myStream] + 1),
 									cudaMemcpyHostToDevice, streamF[myStream]));
+//					cout << "10" << endl;
 
 					stage4_probing<<<block_f, thread, 0, streamF[myStream]>>>(k,
 							myWorkloadThresholdF[tmpRank], seedLen, myArraysC3_dev[tmpRank]->SEEDF,
@@ -1597,6 +1623,7 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 							myArraysC3_dev[tmpRank]->PFoffset, myArraysC3_dev[tmpRank]->PF,
 							myArraysC3_dev[tmpRank]->SIDF, myArraysC3_dev[tmpRank]->SIDFoffset,
 							myArraysC3_dev[tmpRank]->outputF, maxLen);
+//					cout << "11" << endl;
 
 					stage4_probing2<<<1024, thread, 0, streamF[myStream]>>>(k,
 							myWorkloadThresholdF[tmpRank], myseedHfcnt[tmpRank], seedLen,
@@ -1605,55 +1632,62 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 							P1foffset_dev[myStream], myArraysC3_dev[tmpRank]->PFoffset,
 							myArraysC3_dev[tmpRank]->PF, myArraysC3_dev[tmpRank]->SIDF,
 							myArraysC3_dev[tmpRank]->SIDFoffset, myArraysC3_dev[tmpRank]->outputF, maxLen);
+//					cout << "12" << endl;
 
 				}
 
 				else {
-
+//					cout << "13" << endl;
 					cudaSetDevice(tmpRank);
-
+//					cout << "14" << endl;
 					HANDLE_ERROR(cudaStreamCreate(&streamR[myStream]));
-
+//cout << "15" << endl;
 					HANDLE_ERROR(
 							cudaMalloc((void** ) &P1r_dev[myStream],
 									sizeof(char) * maxLen
 											* rP_total[myStream]));
+//					cout << "16" << endl;
 					HANDLE_ERROR(
 							cudaMalloc((void** ) &SID1r_dev[myStream],
 									sizeof(unsigned int)
 											* rsid_total[myStream]));
+//					cout << "17" << endl;
 					HANDLE_ERROR(
 							cudaMalloc((void** ) &P1roffset_dev[myStream],
 									sizeof(unsigned long)
 											* (rP_total[myStream] + 1)));
+//					cout << "18" << endl;
 					HANDLE_ERROR(
 							cudaMalloc((void** ) &c1_roff_dev[myStream],
 									sizeof(unsigned long)
 											* (Gr_size[myStream] + 1)));
-
+//cout << "19" << endl;
 					HANDLE_ERROR(
 							cudaMemcpyAsync(P1r_dev[myStream],
 									&myP1r[myStream][0],
 									sizeof(char) * maxLen * rP_total[myStream],
 									cudaMemcpyHostToDevice, streamR[myStream]));
+//					cout << "20" << endl;
 					HANDLE_ERROR(
 							cudaMemcpyAsync(SID1r_dev[myStream],
 									&mySID1r[myStream][0],
 									sizeof(unsigned int) * rsid_total[myStream],
 									cudaMemcpyHostToDevice, streamR[myStream]));
+//					cout << "21" << endl;
 					HANDLE_ERROR(
 							cudaMemcpyAsync(P1roffset_dev[myStream],
 									&mySID1roffset[myStream][0],
 									sizeof(unsigned long)
 											* (rP_total[myStream] + 1),
 									cudaMemcpyHostToDevice, streamR[myStream]));
+//					cout << "22" << endl;
 					HANDLE_ERROR(
 							cudaMemcpyAsync(c1_roff_dev[myStream],
 									&myP1roffset[myStream][0],
 									sizeof(unsigned long)
 											* (Gr_size[myStream] + 1),
 									cudaMemcpyHostToDevice, streamR[myStream]));
-
+//cout << "23" << endl;
 					stage4_probing<<<block_r, thread, 0, streamR[myStream]>>>(k,
 							myWorkloadThresholdR[tmpRank], seedLen, myArraysC3_dev[tmpRank]->SEEDR,
 							c1_roff_dev[myStream], P1r_dev[myStream],
@@ -1661,7 +1695,7 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 							myArraysC3_dev[tmpRank]->PRoffset, myArraysC3_dev[tmpRank]->PR,
 							myArraysC3_dev[tmpRank]->SIDR, myArraysC3_dev[tmpRank]->SIDRoffset,
 							myArraysC3_dev[tmpRank]->outputR, maxLen);
-
+//cout << "24" << endl;
 					stage4_probing2<<<1024, thread, 0, streamR[myStream]>>>(k,
 							myWorkloadThresholdR[tmpRank], myseedHrcnt[tmpRank], seedLen,
 							myArraysC3_dev[tmpRank]->SEEDR, c1_roff_dev[myStream],
@@ -1669,6 +1703,7 @@ void* stage4Probing(void* param) { //prepare arraysC1 and perform GPU operation
 							P1roffset_dev[myStream], myArraysC3_dev[tmpRank]->PRoffset,
 							myArraysC3_dev[tmpRank]->PR, myArraysC3_dev[tmpRank]->SIDR,
 							myArraysC3_dev[tmpRank]->SIDRoffset, myArraysC3_dev[tmpRank]->outputR, maxLen);
+//					cout << "25" << endl;
 
 				}
 
@@ -3346,7 +3381,7 @@ void initialization(inputParameter* input) {
 		myArraysC3[i] = new arraysForStep4;
 		myArraysC3_dev[i] = new arraysForStep4;
 	}
-	numOfStreams = 20;
+	numOfStreams = 100;
 }
 
 void initialization2(long input_workload) {
