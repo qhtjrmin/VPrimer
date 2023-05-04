@@ -157,7 +157,7 @@ void organismBuilding(){//seperated by '-'. build organismV
 		if(fin.gcount() > 0){
 			ptr = buf;
 			if(strchr(ptr, '\t') != NULL){
-				ptr2 = strchr(ptr, '\t');
+				ptr2 = strpbrk(ptr, " \t");
 				*ptr2 = '\0';
 				strcpy(vidset, ++ptr2);
 
@@ -185,6 +185,11 @@ void organismBuilding(){//seperated by '-'. build organismV
 			}
 		}
 	}
+	/*	check organismV
+	for (int i = 0; i < organismV.size(); i++) {
+    cout << "organismV[" << i << "]: " << organismV[i].first << "-" << organismV[i].second << endl;
+}*/
+
 
 }
 
@@ -206,7 +211,7 @@ void variantBuilding(){//separated as sid. build sid2vidH
 
 		if(fin.gcount() > 0){
 			ptr = buf;
-			ptr2 = strchr(ptr, '\t');
+			ptr2 = strpbrk(ptr, " \t");
 			*ptr2 = '\0';
 
 			sid = new char[sidLen + 1];
@@ -225,6 +230,15 @@ void variantBuilding(){//separated as sid. build sid2vidH
 			sid2vidH.insert(pair<char*, set<int>>(sid, tmp));
 		}
 	}
+	/* check sid2vidH
+	for (auto it = sid2vidH.begin(); it != sid2vidH.end(); ++it) {
+    cout << "sid: " << it->first << endl;
+    for (auto vid : it->second) {
+        cout << "vid: " << vid << endl;
+    }
+}
+*/
+
 
 }
 

@@ -237,7 +237,7 @@ void stage1Sort(){
 	
 	//sort by primer
 	command = "sort -k1,1 -k2,2n -S 70% --parallel "
-			+ to_string(myInput->numOfThreads) + " -T " + "/data/ssd1/min/" + " "
+			+ to_string(myInput->numOfThreads) + " -T " + string(myInput->dirPath) + " "
 			+ string(myInput->dirPath) + "/tmpC1.txt_*" + " -o " + sortedFile;
 	sysCall(command);
 }
@@ -1954,7 +1954,7 @@ void stage4Final(){// cat total result file for sorting
 	del(myArraysC3);
 	del(myArraysC3_dev);
 
-	command = "sort -k2,2n -k1,1 -S 50% --parallel 20 -T /data/ssd2/min/ "
+	command = "sort -k2,2n -k1,1 -S 50% --parallel 20 -T " + string(myInput->dirPath) + " "
 			+ string(myInput->dirPath) + "/C4_2.txt_* -o " + string(myInput->dirPath) + "/sorted_C4.txt";
 	sysCall(command);
 }
