@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	initialization(input);
+	cout << "initialization end." << endl;
 
 	st = getCurrentTime();
 	variantBuilding();
