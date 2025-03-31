@@ -3,6 +3,8 @@
  *
  *  Created on: Feb 11, 2020
  *      Author: jmbae
+ *  Latest update: May 04, 2023
+ *  	by hjjeon
  */
 
 #ifndef INPUT_HPP_
@@ -158,6 +160,9 @@ bool readInputParameter(int argc, char*argv[], inputParameter* input) {
 
 			tmpFname = dir + "/C1.txt";
 			strcpy(input->c1Path, tmpFname.c_str());
+
+			tmpFname = dir + "/C1'.txt";
+                        strcpy(input->c1SidsetPath, tmpFname.c_str());
 
 			tmpFname = dir + "/C2.txt";
 			strcpy(input->c2Path, tmpFname.c_str());

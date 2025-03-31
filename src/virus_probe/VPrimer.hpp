@@ -3,6 +3,8 @@
  *
  *  Created on: Feb 15, 2020
  *      Author: jmbae
+ *  Latest update: May 04, 2023
+ *  	by hjjeon
  */
 
 #ifndef GPRIMER_HPP_
@@ -235,7 +237,7 @@ void stage1Sort(){
 	
 	//sort by primer
 	command = "sort -k1,1 -k2,2n -S 70% --parallel "
-			+ to_string(myInput->numOfThreads) + " -T " + "/data/ssd1/min/" + " "
+			+ to_string(myInput->numOfThreads) + " -T " + string(myInput->dirPath) + " "
 			+ string(myInput->dirPath) + "/tmpC1.txt_*" + " -o " + sortedFile;
 	sysCall(command);
 }
@@ -317,9 +319,10 @@ void* stage2(void* rank) {
 	ifstream fin;
 	fileReadOpen(&fin, myInput->c1Path, myRank);
 
-	FILE *fout1, *fout2;
+	FILE *fout1, *fout2, *fout3;
 	fileWriteOpen(&fout1, myInput->c2Path, myRank); // C2.txt
 	fileWriteOpen(&fout2, myInput->myc1SidsetPath, myRank); //C1'.txt
+	fileWriteOpen(&fout3, myInput->c1SidsetPath, myRank);
 
 	while (fin.good()) {
 
@@ -421,10 +424,13 @@ void* stage2(void* rank) {
 				else
 					pass = false;
 
-				if (line > 0)
+				if (line > 0) {
 					fprintf(fout2, "%s\n", val[0]); //write to C1'
-				else
+					fprintf(fout3, "\n%s\t%s", val[0], val[1]);
+				}else {
 					fprintf(fout2, "%s\n", val[0]); //write to C1'
+					fprintf(fout3, "%s\t%s", val[0], val[1]);
+				}
 			}
 
 			else if (!strcmp(val[0], beforePrimer) && pass) {
@@ -432,8 +438,8 @@ void* stage2(void* rank) {
 
 				fprintf(fout1, "%s\t%s\t%s\n", val[0], val[1], val[2]); //write to C2
 
-				//if (strcmp(beforeSid, val[1]))
-				//	fprintf(fout2, "-%s", val[1]); //write to C1'
+				if (strcmp(beforeSid, val[1]))
+					fprintf(fout3, "-%s", val[1]); //write to C1'
 
 				primer = new char[maxLen + 2];
 				sid = new char[6];
@@ -448,18 +454,18 @@ void* stage2(void* rank) {
 				pthread_mutex_unlock(&sidsetH_lock);
 
 			}
-/*
+
 			else {
 				//before primer is the same as current primer but before primer is filterd out
 				if (strcmp(beforeSid, val[1]))
-					fprintf(fout2, "-%s", val[1]); //write to C1'
+					fprintf(fout3, "-%s", val[1]); //write to C1'
 			}
-*/		}
+		}
 		strcpy(beforePrimer, val[0]);
 		strcpy(beforeSid, val[1]);
 		line++;
 	}
-//	fprintf(fout2, "\n"); //write to C1'
+	fprintf(fout3, "\n"); //write to C1'
 
 	del(beforePrimer);
 	del(beforeSid);
@@ -468,6 +474,7 @@ void* stage2(void* rank) {
 	fin.close();
 	fclose(fout1);
 	fclose(fout2);
+	fclose(fout3);
 
 	return NULL;
 }
@@ -1947,7 +1954,7 @@ void stage4Final(){// cat total result file for sorting
 	del(myArraysC3);
 	del(myArraysC3_dev);
 
-	command = "sort -k2,2n -k1,1 -S 50% --parallel 20 -T /data/ssd2/min/ "
+	command = "sort -k2,2n -k1,1 -S 50% --parallel 20 -T " + string(myInput->dirPath) + " "
 			+ string(myInput->dirPath) + "/C4_2.txt_* -o " + string(myInput->dirPath) + "/sorted_C4.txt";
 	sysCall(command);
 }
